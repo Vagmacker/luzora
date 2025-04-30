@@ -1,4 +1,4 @@
-package domain
+package product
 
 import (
 	"time"
@@ -15,12 +15,12 @@ type Product struct {
 	Price       float64
 	CostPrice   float64
 	Stock       int64
-	Category    *Category
+	CategoryId  string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 
-func NewProduct(name, description, image string, price, costPrice float64, stock int64) *Product {
+func New(name, description, image string, price, costPrice float64, stock int64) *Product {
 	now := time.Now()
 	return &Product{
 		ID:          uuid.New().String(),

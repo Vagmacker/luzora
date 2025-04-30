@@ -1,4 +1,4 @@
-package domain
+package email
 
 import (
 	"errors"
@@ -16,22 +16,24 @@ var (
 	ValidEmailSeq     = regexp.MustCompile(`^[a-zA-Z0-9+._~\-]+@[a-zA-Z0-9+._~\-]+(\.[a-zA-Z0-9+._~\-]+)+$`)
 )
 
-type Email string
+type Email struct {
+	value string
+}
 
-func NewEmail(email string) (Email, error) {
+func New(email string) (Email, error) {
 	if strings.TrimSpace(email) == "" {
-		return "", errors.New("cannot be empty")
+		return Email{}, errors.New("cannot be empty")
 	}
 
 	if strings.ContainsAny(email, " \t\n\r") {
-		return "", errors.New("cannot contain whitespace")
+		return Email{}, errors.New("cannot contain whitespace")
 	}
 	if strings.ContainsAny(email, `"'`) {
-		return "", errors.New("cannot contain quotes")
+		return Email{}, errors.New("cannot contain quotes")
 	}
 
 	if rc := utf8.RuneCountInString(email); rc > EmailMaxLength {
-		return "", fmt.Errorf("cannot be a over %v characters in length", EmailMaxLength)
+		return Email{}, fmt.Errorf("cannot be a over %v characters in length", EmailMaxLength)
 	}
 
 	addr, err := mail.ParseAddress(email)
@@ -41,38 +43,38 @@ func NewEmail(email string) (Email, error) {
 
 		switch {
 		case strings.Contains(msg, "missing '@'"):
-			return "", errors.New("missing the @ sign")
+			return Email{}, errors.New("missing the @ sign")
 
 		case strings.HasPrefix(email, "@"):
-			return "", errors.New("missing part before the @ sign")
+			return Email{}, errors.New("missing part before the @ sign")
 
 		case strings.HasSuffix(email, "@"):
-			return "", errors.New("missing part after the @ sign")
+			return Email{}, errors.New("missing part after the @ sign")
 		}
 
-		return "", errors.New(msg)
+		return Email{}, errors.New(msg)
 	}
 
 	if addr.Name != "" {
-		return "", errors.New("cannot not include a name")
+		return Email{}, errors.New("cannot not include a name")
 	}
 
 	if matches := InvalidEmailChars.FindAllString(addr.Address, -1); len(matches) != 0 {
-		return "", fmt.Errorf("cannot contain: %v", matches)
+		return Email{}, fmt.Errorf("cannot contain: %v", matches)
 	}
 
 	if !ValidEmailSeq.MatchString(addr.Address) {
 		_, end, _ := strings.Cut(addr.Address, "@")
 		if !strings.Contains(end, ".") {
-			return "", errors.New("missing top-level domain, e.g. .com, .co.uk, etc")
+			return Email{}, errors.New("missing top-level domain, e.g. .com, .co.uk, etc")
 		}
 
-		return "", errors.New("must be an email address, e.g. email@example.com")
+		return Email{}, errors.New("must be an email address, e.g. email@example.com")
 	}
 
-	return Email(addr.Address), nil
+	return Email{value: addr.Address}, nil
 }
 
-func (e Email) String() string {
-	return string(e)
+func (e Email) Value() string {
+	return e.value
 }

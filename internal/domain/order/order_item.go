@@ -1,4 +1,4 @@
-package domain
+package order
 
 import "time"
 
@@ -11,6 +11,4 @@ type OrderItem struct {
 	TotalPrice float64
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	Order      *Order
-	Product    *Product
 }
